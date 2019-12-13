@@ -15,10 +15,17 @@
     ],
     "minimum-stability": "dev",
     "prefer-stable": true,
+    "repositories": [
+        {
+            "url": "https://github.com/hvu-sugarcrm/toothpaste.git",
+            "type": "git"
+        }
+    ],
     "require": {
         "php": ">=7.1",
         "symfony/console": "4.3.*",
-        "guzzlehttp/guzzle": "6.4.*"
+        "guzzlehttp/guzzle": "6.4.*",
+        "esimonetti/toothpaste":"dev-master"
     },
     "require-dev": {
         "phpunit/phpunit": "*"
