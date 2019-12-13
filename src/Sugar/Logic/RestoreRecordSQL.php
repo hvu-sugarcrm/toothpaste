@@ -245,7 +245,7 @@ class RestoreRecordSQL extends Sugar\BaseLogic
 									$query
 										->update($relationship_obj->getRelationshipTable())
 										->set('deleted', 0)
-										->where('id IN (:ids)')
+										->where($expr->in('id', ':ids'))
 										->setParameter('ids', $results, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
 									
 									// stock tables such as cases does not have a join table so we don't need to set the join column 
@@ -333,7 +333,7 @@ class RestoreRecordSQL extends Sugar\BaseLogic
 										
 									} else {
 										$query
-											->where('id IN (:ids)')
+											->where($expr->in('id', ':ids'))
 											->setParameter('ids', $results,\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
                                         
                                         $this->writeln('');
