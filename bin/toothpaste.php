@@ -42,6 +42,8 @@ $application->add(new \Toothpaste\Commands\LogicHooksUsageCommand());
 $application->add(new \Toothpaste\Commands\SugarBPMAnalysisCommand());
 $application->add(new \Toothpaste\Commands\RestoreRecordCommand());
 $application->add(new \Toothpaste\Commands\RestoreRecordSQLCommand());
+$application->add(new \Toothpaste\Commands\AnalyseStorageCommand());
+
 
 $application->run();
 

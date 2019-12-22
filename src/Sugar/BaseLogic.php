@@ -85,4 +85,29 @@ class BaseLogic
         }
         return $files;
     }
+
+    /* 
+     * Helper function to indetify whether the file has a GUID format
+     * https://gist.github.com/Joel-James/3a6201861f12a7acf4f2
+     * @param   string  $string   The string to check
+     * @return  boolean
+     */
+    protected function isGUID($string) {
+        if (!is_string($string) || (preg_match('/^[a-f\d]{8}(-[a-f\d]{4}){4}[a-f\d]{8}$/', $string) !== 1)) {
+            return false;
+        }
+        return true;
+    }
+
+    /* 
+     * Helper function to print the file size in a human readable format
+     * https://gist.github.com/liunian/9338301
+     * @param   int  $bytes   The size in bytes
+     * @return  string 
+     */
+    protected function prettify_filesize($bytes) {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+        for ($i = 0; $bytes > 1024; $i++) $bytes /= 1024;
+        return round($bytes, 2) . ' ' . $units[$i];
+    }
 }

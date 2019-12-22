@@ -6,80 +6,49 @@
 CLI utility to analyse, optimise and provide additional functionality to your Sugar system. As it is a CLI only tool, it cannot execute from within Sugar Cloud.<br />
 This tool allows the execution of various CLI actions including repair, useful ongoing maintenance, identification of possible problems and extracting data from a Sugar installation.
 
-## Requirements
-* Linux
-* PHP >= 7.1
-* Composer
-* Some commands only run with MySQL at this stage
+For more information see: https://github.com/esimonetti/toothpaste/blob/master/README.md
 
-## Installation
-Within your installation directory (eg: `~/toothpaste`), run the following:
-```
-composer require esimonetti/toothpaste *
-```
-Composer will download toothpaste and all its dependencies, so that you are ready to go.<br />
-To be able to execute local commands, toothpaste has to be able to access a local Sugar installation, be on the same server, and with php CLI available.
+## What's New 
 
-### Installation on SugarDockerized
-As there were some problems running the installation commands from outside the containers, the following installation steps will enter the `sugar-cron` container to perform the installation.
-```
-docker exec -it sugar-cron bash
-mkdir ../toothpaste
-cd ../toothpaste
-composer require esimonetti/toothpaste *
-exit
-```
++ local:data:restore-record-query 
 
-### Running toothpaste on SugarDockerized
-To execute toothpaste, leverage the bash scripts provided with SugarDockerized
+Restore a soft-deleted record (if present) and most of its relationships from a backup database.
+
+A slave db config is to be added as per https://support.sugarcrm.com/Documentation/Sugar_Versions/9.2/Serve/Administration_Guide/Advanced_Configuration_Options/index.html#Configuring_a_Slave_Database
+
+For example: 
+
 ```
-./utilities/runcli.sh "cd ../toothpaste && ./vendor/bin/toothpaste list"
+$sugar_config['db']['hvu-920ent3-backup'] = array(
+'db_host_name' => <db_host_name>,
+'db_user_name' => <db_user_name>,
+'db_password' => <db_password>,
+'db_name' => <db_name>,
+'db_type' => 'mysql',
+'db_manager' => 'MysqliManager'
+);
 ```
 
-## Sample uses
-### List
-To show the list of commands available, run the following:
+### Usage:
+
 ```
-./vendor/bin/toothpaste list
+./vendor/bin/toothpaste local:data:restore-record-query --instance=/var/www/html --module=Accounts --record=635be41c-0d9c-11ea-b1c6-0242ac120006 --db_backup=hvu920ent-backup
 ```
-### Repair
-To repair a system (located in `/var/www/html/sugar`), run the following:
+
++ local:analysis:storage
+
+Perform an analysis on the current storage (in the 'upload' folder)
+
+### Usage
+
+Debug mode for terminal output only (obmit debug option to save into a file)
 ```
-./vendor/bin/toothpaste local:system:repair --instance /var/www/html/sugar
+./vendor/bin/toothpaste local:analysis:storage --instance=/var/www/html --debug=1‍‍
 ```
+
+Set timezone for the timestamp of the date modified of the file
+
 ```
-Toothpaste vX.X.X
-Executing Repair command...
-Entering /var/www/html/sugar...
-Setting up instance...
-Executing simple repair...
-Clearing cache...
-Executing basic instance warm-up...
-Execution completed in 6.01 seconds.
-```
-### Maintenance on/off
-To set maintenance mode on/off for a system (located in `/var/www/html/sugar`), run the following:
-```
-./vendor/bin/toothpaste local:maintenance:on --instance /var/www/html/sugar
-```
-```
-Toothpaste vX.X.X
-Setting maintenance mode on...
-Entering /var/www/html/sugar...
-Setting up instance...
-The configuration setting maintenanceMode is now set to: on
-The system is ONLY accessible via the UI by ADMINISTRATOR users
-Execution completed in 0.19 seconds.
-```
-```
-./vendor/bin/toothpaste local:maintenance:off --instance /var/www/html/sugar
-```
-```
-Toothpaste vX.X.X
-Setting maintenance mode off...
-Entering /var/www/html/sugar...
-Setting up instance...
-The configuration setting maintenanceMode is now set to: off
-The system is accessible via the UI by all users
-Execution completed in 0.17 seconds.
+./vendor/bin/toothpaste local:analysis:storage --instance=/var/www/html --timezone=America/Los_Angeles‍‍ 
+
 ```
