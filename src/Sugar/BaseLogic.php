@@ -110,4 +110,22 @@ class BaseLogic
         for ($i = 0; $bytes > 1024; $i++) $bytes /= 1024;
         return round($bytes, 2) . ' ' . $units[$i];
     }
+
+    protected function getSugarURL() { 
+        return $this->addTrailingSlash($GLOBALS['sugar_config']['site_url']);
+    }
+
+    /** 
+     * Helper function to get the list of the largest files 
+     * @param $num int The number of files, default to 20
+     * @return string The result of the command
+     */
+    protected function getBigFiles($num = 20) {
+        return shell_exec('ls -hsS ' . $this->getPath() .' | head -' . $num);
+    }
+
+    protected function getOldestFile($dir) {
+        return shell_exec('ls -t ' . $this->getPath() .' | tail -1');
+    }
+
 }

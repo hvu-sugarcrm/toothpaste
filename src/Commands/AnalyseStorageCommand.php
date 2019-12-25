@@ -21,9 +21,9 @@ class AnalyseStorageCommand extends Command
             ->setDescription('Perform an analysis on the current storage')
             ->setHelp('Command to perform a storage analysis in the upload folder')
             ->addOption('instance', null, InputOption::VALUE_REQUIRED, 'Instance relative or absolute path')
-            ->addOption('dir', null, InputOption::VALUE_OPTIONAL, 'Output directory for analysis result, default to current dir')
+            ->addOption('dir', null, InputOption::VALUE_OPTIONAL, 'Output directory for analysis result, default to false which will print the result on the screen')
             ->addOption('timezone', null, InputOption::VALUE_OPTIONAL, 'Specify your timezone, otherwise default to Australia/Sydney timezone. See https://www.php.net/manual/en/timezones.php')
-            ->addOption('debug', null, InputOption::VALUE_OPTIONAL, 'Debug mode, default to false')
+            ->addOption('detailed', null, InputOption::VALUE_OPTIONAL, 'Detailed mode, default to false')
         ;
     }
 
@@ -33,10 +33,9 @@ class AnalyseStorageCommand extends Command
 
         $dir = $input->getOption('dir');
         $timezone = $input->getOption('timezone');
-        $debug = $input->getOption('debug');
-
-
+        $detailed = $input->getOption('detailed');
         $instance = $input->getOption('instance');
+
         if (empty($instance)) {
             $output->writeln('Please provide the instance path. Check with --help for the correct syntax');
         } else {
@@ -47,7 +46,7 @@ class AnalyseStorageCommand extends Command
                 $output->writeln('Setting up instance...');
                 Sugar\Instance::setup();
 
-                $logic = new Sugar\Logic\AnalyseStorage($dir, $timezone, $debug);
+                $logic = new Sugar\Logic\AnalyseStorage($dir, $timezone, $detailed);
                 $logic->setLogger($output);
                 $logic->performStorageAnalysis();
             } else {

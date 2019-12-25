@@ -31,6 +31,8 @@ $sugar_config['db']['hvu-920ent3-backup'] = array(
 
 ### Usage:
 
+Assuming Sugar is located in `/var/www/html`
+
 ```
 ./vendor/bin/toothpaste local:data:restore-record-query --instance=/var/www/html --module=Accounts --record=635be41c-0d9c-11ea-b1c6-0242ac120006 --db_backup=hvu920ent-backup
 ```
@@ -41,14 +43,36 @@ Perform an analysis on the current storage (in the 'upload' folder)
 
 ### Usage
 
-Debug mode for terminal output only (obmit debug option to save into a file)
+Assuming Sugar is located in `/var/www/html`
+
+Most basic form:
 ```
-./vendor/bin/toothpaste local:analysis:storage --instance=/var/www/html --debug=1‍‍
+./vendor/bin/toothpaste local:analysis:storage --instance=/var/www/html
+```
+
+Output
+```
+SUMMARY
++------+-------+--------+-----+------+------+-------+---------+
+| YEAR | NOTES | EMAILS | KBS | DOCS | PICS | TOTAL |  SIZE   |
++------+-------+--------+-----+------+------+-------+---------+
+| 2019 |   3   |   3    |  1  |  2   |  8   |  17   | 1.31 MB |
+| 2015 |   1   |   0    |  0  |  0   |  0   |   1   | 43.1 KB |
++------+-------+--------+-----+------+------+-------+---------+
+```
+
+Detailed mode for the list of files organised by Year-Month-Day
+```
+./vendor/bin/toothpaste local:analysis:storage --instance=/var/www/html --detailed=1‍‍
+```
+
+Save to disk
+```
+./vendor/bin/toothpaste local:analysis:storage --instance=/var/www/html --dir=.
 ```
 
 Set timezone for the timestamp of the date modified of the file
 
 ```
 ./vendor/bin/toothpaste local:analysis:storage --instance=/var/www/html --timezone=America/Los_Angeles‍‍ 
-
 ```
