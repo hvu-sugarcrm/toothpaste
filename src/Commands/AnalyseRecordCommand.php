@@ -11,19 +11,18 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Toothpaste\Sugar;
 
-class AnalyseStorageCommand extends Command
+class AnalyseRecordCommand extends Command
 {
-    protected static $defaultName = 'local:analysis:storage';
+    protected static $defaultName = 'local:analysis:record';
 
     protected function configure()
     {
         $this
-            ->setDescription('Perform an analysis of the current file storage, particularly the upload folder')
-            ->setHelp('Command to perform a storage analysis of the upload folder')
+            ->setDescription('Analyse db storage of the largest tables')
+            ->setHelp('Analyse db storage of the largest tables')
             ->addOption('instance', null, InputOption::VALUE_REQUIRED, 'Instance relative or absolute path')
-            ->addOption('dir', null, InputOption::VALUE_OPTIONAL, 'Output directory for analysis result, default to false which will print the result on the screen')
-            ->addOption('timezone', null, InputOption::VALUE_OPTIONAL, 'Specify your timezone, otherwise default to Australia/Sydney timezone. See https://www.php.net/manual/en/timezones.php')
-            ->addOption('detailed', null, InputOption::VALUE_OPTIONAL, 'Detailed mode, default to false')
+            ->addOption('months', null, InputOption::VALUE_OPTIONAL, 'Breakdown of data by months')
+            
         ;
     }
 
@@ -31,11 +30,10 @@ class AnalyseStorageCommand extends Command
     {
         \Toothpaste\Toothpaste::resetStartTime();
 
-        $dir = $input->getOption('dir');
-        $timezone = $input->getOption('timezone');
-        $detailed = $input->getOption('detailed');
-        $instance = $input->getOption('instance');
+        $months = $input->getOption('months');
+        $output->writeln('Analysing large tables ...');
 
+        $instance = $input->getOption('instance');
         if (empty($instance)) {
             $output->writeln('Please provide the instance path. Check with --help for the correct syntax');
         } else {
@@ -45,10 +43,9 @@ class AnalyseStorageCommand extends Command
                 $output->writeln('Entering ' . $path . '...');
                 $output->writeln('Setting up instance...');
                 Sugar\Instance::setup();
-
-                $logic = new Sugar\Logic\AnalyseStorage($dir, $timezone, $detailed);
+                $logic = new Sugar\Logic\AnalyseRecord($months);
                 $logic->setLogger($output);
-                $logic->performStorageAnalysis();
+                $logic->performRecordAnalysis();
             } else {
                 $output->writeln($instance . ' does not contain a valid Sugar installation. Aborting...');
             }
