@@ -10,7 +10,7 @@ For more information see: https://github.com/esimonetti/toothpaste/blob/master/R
 
 ## What's New 
 
-+ local:data:restore-record-query 
+**local:data:restore-record-query**
 
 Restore a soft-deleted record (if present) and most of its relationships from a backup database.
 
@@ -18,7 +18,7 @@ A slave db config is to be added as per https://support.sugarcrm.com/Documentati
 
 For example: 
 
-```
+```PHP
 $sugar_config['db']['hvu-920ent3-backup'] = array(
 'db_host_name' => <db_host_name>,
 'db_user_name' => <db_user_name>,
@@ -31,22 +31,22 @@ $sugar_config['db']['hvu-920ent3-backup'] = array(
 
 ### Usage:
 
-Assuming Sugar is located in `/var/www/html`
+*Assuming Sugar is located in `/var/www/html`*
 
-```
+```PowerShell
 ./vendor/bin/toothpaste local:data:restore-record-query --instance=/var/www/html --module=Accounts --record=635be41c-0d9c-11ea-b1c6-0242ac120006 --db_backup=hvu920ent-backup
 ```
 
-+ local:analysis:storage
+**local:analysis:storage**
 
 Perform an analysis on the current storage (in the 'upload' folder)
 
 ### Usage
 
-Assuming Sugar is located in `/var/www/html`
+*Assuming Sugar is located in `/var/www/html`*
 
 Most basic form:
-```
+```PowerShell
 ./vendor/bin/toothpaste local:analysis:storage --instance=/var/www/html
 ```
 
@@ -62,27 +62,26 @@ SUMMARY
 ```
 
 Detailed mode for the list of files organised by Year-Month-Day
-```
+```PowerShell
 ./vendor/bin/toothpaste local:analysis:storage --instance=/var/www/html --detailed=1‍‍
 ```
 
 Save to disk
-```
+```PowerShell
 ./vendor/bin/toothpaste local:analysis:storage --instance=/var/www/html --dir=.
 ```
 
 Set timezone for the timestamp of the date modified of the file
-
-```
+```PowerShell
 ./vendor/bin/toothpaste local:analysis:storage --instance=/var/www/html --timezone=America/Los_Angeles‍‍ 
 ```
 
-+ local:analysis:record
+**local:analysis:record**
 
-Assuming Sugar is located in `/var/www/html`
+*Assuming Sugar is located in `/var/www/html`*
 
 Most basic form:
-```
+```PowerShell
 ./vendor/bin/toothpaste local:analysis:record --instance=/var/www/html
 ```
 
@@ -124,6 +123,6 @@ etc.
 ```
 
 Option to show x number of months
-```
+```PowerShell
 ./vendor/bin/toothpaste local:analysis:record --instance=/var/www/html --months=7
 ```
