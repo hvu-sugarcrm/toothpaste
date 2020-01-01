@@ -2,3 +2,8 @@
 composer.lock
 src/Toothpaste.php.original
 /phar/
+.DS_Store
+.DS_Store?
+.Trashes
+ehthumbs.db
+Thumbs.db
