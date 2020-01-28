@@ -10,7 +10,7 @@ use Toothpaste\Sugar;
 class RestoreRecordSQL extends Sugar\BaseLogic
 {
     protected $module_name = '';
-    protected $record_id = '';
+    protected $record = '';
     protected $db_backup = '';
 
     protected $conn = null;
@@ -32,84 +32,38 @@ class RestoreRecordSQL extends Sugar\BaseLogic
         'campaign_accounts'
     );
 
-    public function __construct($module_name, $record_id, $db_backup) { 
+    public function __construct($module_name, $record, $db_backup) { 
         $this->db_backup = $db_backup;
         $this->module_name = $module_name;
-        $this->record_id = $record_id;
+        $this->record = $record;
     }
 
     public function printSQL() {
-        if (empty($this->module_name) || empty($this->record_id)) {
-            $this->writeln('To be able to restore a record, the module name and a record id are required');
+        if (empty($this->module_name)) {
+            $this->writeln('The module name is required');
         }
         if (empty($this->db_backup)) {
             $this->writeln('To be able to restore all relationships, the config name of the backup db is required');
-        }
+		}
+		if (empty($this->record)) {
+			$this->writeln('To be able to restore records, the id of the record or the file containing their id is required');
+		}
 
+		// Check if this is a file
+		if (file_exists($this->record)) {
+			$myfile = fopen($this->record, "r") or die("Unable to open file!");
+			while(!feof($myfile)) {
+				$data .= $this->restoreSingleRecord(trim(fgets($myfile)), true);
+				$data .= "\n\n";
+			}				
+			fclose($myfile);
 
-        $this->writeln('Printing the SQL to restore: "' . $this->module_name . '" record with id: "' . $this->record_id);
-        $this->writeln('');
+			$file_name =  $this->addTrailingSlash('./') . 'restore' . '_' . microtime(true);
+			file_put_contents($file_name, $data);
 
-        //$bean = \BeanFactory::retrieveBean($this->module_name, $this->record_id, ['deleted' => 0]);
-        $bean = \BeanFactory::retrieveBean($this->module_name, $this->record_id, array('disable_row_level_security' => true), false);
-
-        if (!empty($bean->id)) {
-
-            if ($bean->deleted) {
-                
-                //$mainBean->mark_undeleted($mainBean->id);
-
-                $query = $this->getConn()->createQueryBuilder();
-                $expr = $query->expr();
-                $query
-                    ->update($bean->table_name)
-                    ->set('deleted', 0)
-                    ->where($expr->eq('id',  ':id'))
-                    ->setParameter('id', $this->record_id);
-
-                $this->writeln('### Query to restore the main record: ###');
-                $this->writeln($this->makeSQL($query));
-            }
-
-            $this->writeln('### Query to restore the email addresses: ###');
-            $this->restoreEmailAddress($bean->date_modified);
-
-            $linked_fields = $bean->get_linked_fields();
-
-            foreach($linked_fields as $link_name => $properties) {
-                /* 
-                // $bean: Accounts
-                
-                $properties = {
-                    name: "contacts",
-                    type: "link",
-                    relationship: "accounts_contacts",
-                    module: "Contacts",
-                    bean_name: "Contact",
-                    source: "non-db",
-                    vname: "LBL_CONTACTS"
-                }
-                // $bean: Contacts:
-                $properties = {
-                    name: "accounts",
-                    type: "link",
-                    relationship: "accounts_contacts",
-                    link_type: "one",
-                    source: "non-db",
-                    vname: "LBL_ACCOUNT",
-                    duplicate_merge: "disabled",
-                    primary_only: "1"
-                    }
-                */
-			
-                if (!in_array($link_name, $this->skip_modules)) {
-                    $this->restoreDeletedRelationshipRecords($link_name, $properties, $bean);
-                } 
-            }
-				
-        } else {
-            $this->writeln('The provided record does not exist');
-        }
+		} else {
+			$this->restoreSingleRecord($this->record);
+		}
 
         $this->writeln('');
     }
@@ -151,7 +105,80 @@ class RestoreRecordSQL extends Sugar\BaseLogic
 		return $sql . ';';
 	}
 
-    private function restoreEmailAddress($date_modified) {
+	private function restoreSingleRecord($record_id, $save_to_file = false) {
+		$data = '';
+		$this->writeln('Printing the SQL to restore: "' . $this->module_name . '" record with id: ' . $record_id);
+        $this->writeln('');
+
+        //$bean = \BeanFactory::retrieveBean($this->module_name, $record_id, ['deleted' => 0]);
+        $bean = \BeanFactory::retrieveBean($this->module_name, $record_id, array('disable_row_level_security' => true), false);
+
+		if (!empty($bean->id)) {
+            if ($bean->deleted) {
+                //$mainBean->mark_undeleted($mainBean->id);
+
+                $query = $this->getConn()->createQueryBuilder();
+                $expr = $query->expr();
+                $query
+                    ->update($bean->table_name)
+                    ->set('deleted', 0)
+                    ->where($expr->eq('id',  ':id'))
+                    ->setParameter('id', $record_id);
+
+                $this->writeln('### Query to restore the main record: ###');
+				$this->writeln($this->makeSQL($query));
+				
+				if ($save_to_file) {
+					$data .= "### RESTORING " . $record_id . " ### \n\n";
+					$data .= $this->makeSQL($query);
+					$data .= "\n";
+				}
+            }
+
+            $this->writeln('### Query to restore the email addresses: ###');
+			$data .= $this->restoreEmailAddress($bean->date_modified, $bean->id, $save_to_file);
+			
+            $linked_fields = $bean->get_linked_fields();
+
+            foreach($linked_fields as $link_name => $properties) {
+                /* 
+                // $bean: Accounts
+                
+                $properties = {
+                    name: "contacts",
+                    type: "link",
+                    relationship: "accounts_contacts",
+                    module: "Contacts",
+                    bean_name: "Contact",
+                    source: "non-db",
+                    vname: "LBL_CONTACTS"
+                }
+                // $bean: Contacts:
+                $properties = {
+                    name: "accounts",
+                    type: "link",
+                    relationship: "accounts_contacts",
+                    link_type: "one",
+                    source: "non-db",
+                    vname: "LBL_ACCOUNT",
+                    duplicate_merge: "disabled",
+                    primary_only: "1"
+                    }
+                */
+			
+                if (!in_array($link_name, $this->skip_modules)) {
+					$data .= $this->restoreDeletedRelationshipRecords($link_name, $properties, $bean, $save_to_file);
+                } 
+            }
+				
+        } else {
+            $this->writeln('The provided record does not exist');
+		}
+		return $data;
+	}
+
+    private function restoreEmailAddress($date_modified, $record_id, $save_to_file = false) {
+		$data = '';
 		$query = $this->getConn()->createQueryBuilder();
 		$expr = $query->expr();
 		$query
@@ -159,19 +186,27 @@ class RestoreRecordSQL extends Sugar\BaseLogic
 			->set('deleted', 0)
 			->where($expr->eq('bean_id',  ':id'))
 			->andWhere($expr->eq('date_modified', ':date_modified'))
-			->setParameters(['id' => $this->record_id, 'date_modified' => $date_modified]);
+			->setParameters(['id' => $record_id, 'date_modified' => $date_modified]);
 
 		$this->writeln($this->makeSQL($query));
+
+		if ($save_to_file) {
+			$data .= $this->makeSQL($query);
+			$data .= "\n";
+		}
+		return $data;			
     }
     
 
-    private function restoreDeletedRelationshipRecords($link_name, $properties, $bean)
-    {
+    private function restoreDeletedRelationshipRecords($link_name, $properties, $bean, $save_to_file = false) {
+		$data = '';
 		$linkObj = null;
 		if (empty($link_name)) return false;
 
 		if ($this->debug) {
+			$this->writeln('*********');
 			$this->writeln('Checking  ' . $link_name);
+			$this->writeln('*********');
 		}
 		
 		$module = isset($properties['module']) ? $properties['module'] : $properties['relationship'];
@@ -230,14 +265,15 @@ class RestoreRecordSQL extends Sugar\BaseLogic
 									->select('id')
 									->from($relationship_obj->getRelationshipTable())
 									->where($expr->eq($join_key_column, ':join_key_column'))
-									//->andWhere($expr->eq('deleted', 0))
-									->setParameter('join_key_column', $this->record_id);
+									->andWhere($expr->eq('deleted', 0))
+									->setParameter('join_key_column', $bean->id);
 
 								$results = $query->execute()->fetchAll(\Doctrine\DBAL\FetchMode::COLUMN);
 								
 								// Important debug statement
 								if ($this->debug) {
 									$this->writeln($query->getSQL());
+									$this->writeln('');
 								}
 
 								// Link them back with the parent record
@@ -250,10 +286,15 @@ class RestoreRecordSQL extends Sugar\BaseLogic
 									
 									// stock tables such as cases does not have a join table so we don't need to set the join column 
 									if (!isset($relationship_obj->def['join_table'])) {
-										$query->set($join_key_column, $expr->literal($this->record_id));
+										$query->set($join_key_column, $expr->literal($bean->id));
                                     }
                                     $this->writeln('');
 									$this->writeln($this->makeSQL($query, $module, count($results)));
+
+									if ($save_to_file) {
+										$data .= $this->makeSQL($query, $module, count($results));
+										$data .= "\n";
+									}
 								}
 
 							} else {
@@ -280,7 +321,7 @@ class RestoreRecordSQL extends Sugar\BaseLogic
 									->from($relationship_obj->getRelationshipTable())
 									->where($expr->eq($join_key_column, ':join_key_column'))
 									->andWhere($expr->eq('deleted', 1))
-									->setParameters(['join_key_column' => $this->record_id, 'date_modified' => $bean->date_modified]);
+									->setParameters(['join_key_column' => $bean->id, 'date_modified' => $bean->date_modified]);
 
 								// Some table doesn't have date_modified
 								$sm = $this->getConn()->getSchemaManager();
@@ -291,6 +332,7 @@ class RestoreRecordSQL extends Sugar\BaseLogic
 								// Important debug statement
 								if ($this->debug) {
 									$this->writeln($query->getSQL());
+									$this->writeln('');
 								}
 
 								$results = $query->execute()->fetchAll(\Doctrine\DBAL\FetchMode::COLUMN);
@@ -326,7 +368,12 @@ class RestoreRecordSQL extends Sugar\BaseLogic
 													->where($expr->eq('id', ':id'))
 													->setParameter('id', $result);
                                                     
-                                                $this->writeln($this->makeSQL($query));
+												$this->writeln($this->makeSQL($query));
+												
+												if ($save_to_file) {
+													$data .= $this->makeSQL($query);
+													$data .= "\n";
+												}
 											}	
 											
 										}
@@ -337,7 +384,12 @@ class RestoreRecordSQL extends Sugar\BaseLogic
 											->setParameter('ids', $results,\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
                                         
                                         $this->writeln('');
-                                        $this->writeln($this->makeSQL($query, $module, count($results)));
+										$this->writeln($this->makeSQL($query, $module, count($results)));
+										
+										if ($save_to_file) {
+											$data .= $this->makeSQL($query, $module, count($results));
+											$data .= "\n";
+										}
 									}
 								}
 							}
@@ -345,6 +397,7 @@ class RestoreRecordSQL extends Sugar\BaseLogic
 					} 	
 				}
 			} 
-		} 
+		}
+		return $data;
     }
 }

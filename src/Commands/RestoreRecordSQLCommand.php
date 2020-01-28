@@ -22,7 +22,7 @@ class RestoreRecordSQLCommand extends Command
             ->setHelp('Command to restore a soft-deleted record (if present) and most of its relationships')
             ->addOption('instance', null, InputOption::VALUE_REQUIRED, 'Instance relative or absolute path')
             ->addOption('module', null, InputOption::VALUE_REQUIRED, 'Module to restore')
-            ->addOption('record', null, InputOption::VALUE_REQUIRED, 'Record id to restore')
+            ->addOption('record', null, InputOption::VALUE_REQUIRED, 'Record id to restore or path to a file containting the record ids')
             ->addOption('db_backup', null, InputOption::VALUE_REQUIRED, 'The name of the config of the backup database')
         ;
     }
@@ -52,7 +52,7 @@ class RestoreRecordSQLCommand extends Command
                     $logic->setLogger($output);
                     $logic->printSQL();
                 } else {
-                    $output->writeln('Please provide the module name, the single record id and the name of the backup db to restore. Check with --help for the correct syntax');
+                    $output->writeln('Please provide the module name, the single record id (or file path containting multiple ids) and the name of the backup db to restore. Check with --help for the correct syntax');
                 }
             } else {
                 $output->writeln($instance . ' does not contain a valid Sugar installation. Aborting...');
